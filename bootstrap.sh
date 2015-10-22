@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-OSIAM_VERSION=2.4
+OSIAM_VERSION=3.0
 
 printf "Package: *\nPin: release a=trusty-backports\nPin-Priority: 500\n" > /etc/apt/preferences.d/backports
 apt-get update -qq
@@ -32,8 +32,7 @@ cd /tmp/osiam-distribution-${OSIAM_VERSION}
 
 # configure OSIAM
 mkdir /etc/osiam
-cp -r osiam-server/osiam-resource-server/configuration/* /etc/osiam
-cp -r osiam-server/osiam-auth-server/configuration/* /etc/osiam
+cp -r osiam/configuration/* /etc/osiam
 cp -r addon-self-administration/configuration/* /etc/osiam
 cp -r addon-administration/configuration/* /etc/osiam
 
@@ -55,13 +54,9 @@ echo "CREATE DATABASE ong;" | sudo -u postgres psql
 echo "GRANT ALL PRIVILEGES ON DATABASE ong TO ong;" | sudo -u postgres psql
 
 # Provision database
-mkdir -p migrations/auth-server
-unzip -joqq osiam-server/osiam-auth-server/osiam-auth-server.war 'WEB-INF/classes/db/migration/postgresql/*' -d migrations/auth-server
-flyway -table=auth_server_schema_version -locations=filesystem:migrations/auth-server migrate
-
-mkdir -p migrations/resource-server
-unzip -joqq osiam-server/osiam-resource-server/osiam-resource-server.war 'WEB-INF/classes/db/migration/postgresql/*' -d migrations/resource-server
-flyway -table=resource_server_schema_version -locations=filesystem:migrations/resource-server migrate
+mkdir -p migrations
+unzip -joqq osiam/osiam.war 'WEB-INF/classes/db/migration/postgresql/*' -d migrations
+flyway -table=schema_version -locations=filesystem:migrations migrate
 
 psql -h 127.0.0.1 -f addon-self-administration/sql/client.sql -U ong
 psql -h 127.0.0.1 -f addon-self-administration/sql/extension.sql -U ong
