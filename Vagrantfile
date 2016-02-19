@@ -26,4 +26,8 @@ Vagrant.configure(2) do |config|
   config.vm.provision :file, :source => 'flyway.conf', :destination => '/tmp/flyway.conf'
   config.vm.provision :file, :source => 'addon-self-administration.properties', :destination => '/tmp/addon-self-administration.properties'
   config.vm.provision :shell, :path => 'bootstrap.sh'
+  config.vm.provision "shell" do |s|
+    s.path = 'bootstrap.sh'
+    s.args = "#{ENV['RELEASE_VERSION']}"
+  end
 end

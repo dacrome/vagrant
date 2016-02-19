@@ -6,7 +6,7 @@ printf "Package: *\nPin: release a=trusty-backports\nPin-Priority: 500\n" > /etc
 apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    unzip vim openjdk-7-jdk tomcat7 postgresql maven linux-image-generic
+    unzip vim openjdk-8-jdk tomcat7 postgresql maven linux-image-generic
 
 cd /tmp
 
@@ -23,6 +23,13 @@ ln -s /opt/flyway/flyway /usr/local/bin/flyway
 # install greenmail webapp to provide simple smtp service for the self-administration and administration
 wget --quiet http://central.maven.org/maven2/com/icegreen/greenmail-webapp/1.4.1/greenmail-webapp-1.4.1.war
 mv greenmail-webapp-1.4.1.war /var/lib/tomcat7/webapps/
+
+if [[ -z "$1" ]]; then
+    echo buld OSIAM from GitHub
+    ./install-build.sh
+else
+    echo use OSIAM release ${1}
+fi
 
 # download OSIAM
 wget --quiet https://github.com/osiam/osiam/releases/download/v${OSIAM_VERSION}/osiam-distribution-${OSIAM_VERSION}.tar.gz
