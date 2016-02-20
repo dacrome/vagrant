@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 
-OSIAM_VERSION=2.4
+OSIAM_VERSION=2.5
 
-printf "Package: *\nPin: release a=trusty-backports\nPin-Priority: 500\n" > /etc/apt/preferences.d/backports
+echo 'deb http://http.debian.net/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
 apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    unzip vim openjdk-7-jdk tomcat7 postgresql maven linux-image-generic
+    unzip vim openjdk-8-jdk tomcat8 postgresql-9.4 maven linux-image-generic
 
 cd /tmp
 
@@ -22,7 +22,7 @@ ln -s /opt/flyway/flyway /usr/local/bin/flyway
 
 # install greenmail webapp to provide simple smtp service for the self-administration and administration
 wget --quiet http://central.maven.org/maven2/com/icegreen/greenmail-webapp/1.4.1/greenmail-webapp-1.4.1.war
-mv greenmail-webapp-1.4.1.war /var/lib/tomcat7/webapps/
+mv greenmail-webapp-1.4.1.war /var/lib/tomcat8/webapps/
 
 # download OSIAM
 wget --quiet https://github.com/osiam/osiam/releases/download/v${OSIAM_VERSION}/osiam-distribution-${OSIAM_VERSION}.tar.gz
@@ -44,9 +44,9 @@ sed -i 's/your.smtp.server.com/localhost/g' /etc/osiam/addon-administration.prop
 sed -i 's/org.osiam.mail.server.username=username/org.osiam.mail.server.username=user1/g' /etc/osiam/addon-administration.properties
 
 # configure database
-echo "local all all           trust" > /etc/postgresql/9.3/main/pg_hba.conf
-echo "host  all all 0.0.0.0/0 trust" >> /etc/postgresql/9.3/main/pg_hba.conf
-echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
+echo "local all all           trust" > /etc/postgresql/9.4/main/pg_hba.conf
+echo "host  all all 0.0.0.0/0 trust" >> /etc/postgresql/9.4/main/pg_hba.conf
+echo "listen_addresses='*'" >> /etc/postgresql/9.4/main/postgresql.conf
 
 service postgresql restart
 
@@ -69,13 +69,13 @@ psql -h 127.0.0.1 -f addon-administration/sql/client.sql -U ong
 psql -h 127.0.0.1 -f addon-administration/sql/admin_group.sql -U ong
 
 # setup Tomcat
-sed -i "/^shared\.loader=/c\shared.loader=/var/lib/tomcat7/shared/classes,/var/lib/tomcat7/shared/*.jar,/etc/osiam" /etc/tomcat7/catalina.properties
-sed -i "/^JAVA_OPTS=/c\JAVA_OPTS=\"-Djava.awt.headless=true -Xms512m -Xmx2048m -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:+CMSPermGenSweepingEnabled -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1024m\"" /etc/default/tomcat7
+sed -i "/^shared\.loader=/c\shared.loader=/var/lib/tomcat8/shared/classes,/var/lib/tomcat8/shared/*.jar,/etc/osiam" /etc/tomcat8/catalina.properties
+sed -i "/^JAVA_OPTS=/c\JAVA_OPTS=\"-Djava.awt.headless=true -Xms512m -Xmx2048m -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:+CMSPermGenSweepingEnabled -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1024m\"" /etc/default/tomcat8
 
-service tomcat7 restart
+service tomcat8 restart
 
 # deploy apps
-find . -name '*.war' -exec cp {} /var/lib/tomcat7/webapps/ \;
+find . -name '*.war' -exec cp {} /var/lib/tomcat8/webapps/ \;
 
 # configure docker
 echo "DOCKER_OPTS=\"-H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock\"" >> /etc/default/docker
