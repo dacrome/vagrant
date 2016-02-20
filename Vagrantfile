@@ -28,12 +28,14 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell,
                       inline: "sudo apt-get update -qq && sudo apt-get install apt-transport-https -y"
 
-
   config.vm.provision :docker
-  #config.vm.provision "shell", inline: "ps aux | grep 'sshd:' | awk '{print $2}' | xargs kill"
 
-  config.vm.provision :file, :source => 'flyway.conf', :destination => '/tmp/flyway.conf'
-  config.vm.provision :file, :source => 'addon-self-administration.properties', :destination => '/tmp/addon-self-administration.properties'
+  config.vm.provision :file, :source => 'install', :destination => '/tmp/'
+
 
   config.vm.provision :shell, :path => 'bootstrap.sh'
+  config.vm.provision "shell" do |s|
+    s.path = 'bootstrap.sh'
+    s.args = "#{ENV['RELEASE_VERSION']}"
+  end
 end
